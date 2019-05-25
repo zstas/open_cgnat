@@ -20,6 +20,7 @@
 #include "lcore_rx.h"
 #include "lcore_txrx.h"
 #include "worker.h"
+#include "bitarray.h"
 
 #define VERSION "v0.1"
 

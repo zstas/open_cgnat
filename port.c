@@ -5,9 +5,7 @@ static const struct rte_eth_conf port_conf_default =
         .rxmode =
         {
                 .max_rx_pkt_len = ETHER_MAX_LEN,
-		.offloads = DEV_RX_OFFLOAD_CHECKSUM
-//                .hw_ip_checksum = 1,
-//                .hw_strip_crc   = 1
+				.offloads = DEV_RX_OFFLOAD_CHECKSUM
         },
 	.txmode =
 	{

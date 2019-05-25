@@ -186,6 +186,19 @@ int main( int argc, char ** argv )
 
 	mbuf_pool = rte_pktmbuf_pool_create( "mbuf_pool", NUM_MBUFS, MBUF_CACHE_SIZE, 0, RTE_MBUF_DEFAULT_BUF_SIZE, rte_socket_id() );
 
+	struct bitarray *bat = bitarray_init( 20 );
+	int32_t rrr = bitarray_set_next_available_bit( bat );
+	RTE_LOG( INFO, MAIN, "Set bit with result %d\n", rrr );
+	rrr = bitarray_set_next_available_bit( bat );
+	RTE_LOG( INFO, MAIN, "Set bit with result %d\n", rrr );
+	rrr = bitarray_set_next_available_bit( bat );
+	RTE_LOG( INFO, MAIN, "Set bit with result %d\n", rrr );
+	rrr = bitarray_clean_bit( bat, 1 );
+	RTE_LOG( INFO, MAIN, "Clean bit with result %d\n", rrr );
+	bitarray_print( bat );
+	rrr = bitarray_set_next_available_bit( bat );
+	RTE_LOG( INFO, MAIN, "Set bit with result %d\n", rrr );
+
 	if( mbuf_pool == NULL )
 		rte_exit( EXIT_FAILURE, "Cannot create mbuf pool\n" );
 
@@ -193,8 +206,8 @@ int main( int argc, char ** argv )
 		RTE_LOG( INFO, MAIN, "%d cores is enabled.\n", rte_lcore_count() );
 
 	ret = cgnat_init_pool( &global_config.pool_conf, &global_config.pool, 0 );
-        if( ret < 0 )
-                rte_exit(EXIT_FAILURE, "Error NAT POOL initialization with code %d\n", ret );
+    if( ret < 0 )
+            rte_exit(EXIT_FAILURE, "Error NAT POOL initialization with code %d\n", ret );
 
 	schedule_lcores( global_config.mode );
 

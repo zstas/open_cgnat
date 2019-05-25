@@ -44,7 +44,7 @@ APP = open_cgnat
 
 # all source are stored in SRCS-y
 #SRCS-y := main.c list.c loader.c registry.c worker.c config.c lcore_rx.c lcore_tx.c lcore_txrx.c action.c lcore_tap.c avltree.c tcp_reassemble.c dpi_http.c lcore.c port.c
-SRCS-y := main.c cgnat.c worker.c config.c lcore_rx.c lcore_tx.c lcore_txrx.c port.c lcore.c
+SRCS-y := main.c cgnat.c worker.c config.c lcore_rx.c lcore_tx.c lcore_txrx.c port.c lcore.c bitarray.c
 
 CFLAGS += $(WERROR_FLAGS)
 

@@ -132,43 +132,35 @@ static inline int8_t cgnat_alloc_port( struct cgnat_pool *pool, struct cgnat_poo
 
 		for( int j = 0; j < ( ( 1 << pool->conf.pba_size ) / 8 ); j++ )
 		{
+			RTE_LOG( DEBUG, MAIN, "Iterating over pba i=%d j=%d\n", i, j );
+			struct bitmask_ports *bmp = NULL;
 			switch( proto )
 			{
 				case IPPROTO_TCP:
-					RTE_LOG( DEBUG, MAIN, "Iterating over pba i=%d j=%d\n", i, j );
-					if( entry->portblocks[ i ].tcp[j].port0 == 0 ) { entry->portblocks[ i ].tcp[j].port0 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8; return 0; }
-					if( entry->portblocks[ i ].tcp[j].port1 == 0 ) { entry->portblocks[ i ].tcp[j].port1 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 1; return 0; }
-					if( entry->portblocks[ i ].tcp[j].port2 == 0 ) { entry->portblocks[ i ].tcp[j].port2 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 2; return 0; }
-					if( entry->portblocks[ i ].tcp[j].port3 == 0 ) { entry->portblocks[ i ].tcp[j].port3 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 3; return 0; }
-					if( entry->portblocks[ i ].tcp[j].port4 == 0 ) { entry->portblocks[ i ].tcp[j].port4 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 4; return 0; }
-					if( entry->portblocks[ i ].tcp[j].port5 == 0 ) { entry->portblocks[ i ].tcp[j].port5 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 5; return 0; }
-					if( entry->portblocks[ i ].tcp[j].port6 == 0 ) { entry->portblocks[ i ].tcp[j].port6 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 6; return 0; }
-					if( entry->portblocks[ i ].tcp[j].port7 == 0 ) { entry->portblocks[ i ].tcp[j].port7 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 7; return 0; }
+					bmp = &entry->portblocks[ i ].tcp[ j ];
 					break;
 				case IPPROTO_UDP:
-					if( entry->portblocks[ i ].udp[j].port0 == 0 ) { entry->portblocks[ i ].udp[j].port0 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8; return 0; }
-					if( entry->portblocks[ i ].udp[j].port1 == 0 ) { entry->portblocks[ i ].udp[j].port1 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 1; return 0; }
-					if( entry->portblocks[ i ].udp[j].port2 == 0 ) { entry->portblocks[ i ].udp[j].port2 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 2; return 0; }
-					if( entry->portblocks[ i ].udp[j].port3 == 0 ) { entry->portblocks[ i ].udp[j].port3 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 3; return 0; }
-					if( entry->portblocks[ i ].udp[j].port4 == 0 ) { entry->portblocks[ i ].udp[j].port4 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 4; return 0; }
-					if( entry->portblocks[ i ].udp[j].port5 == 0 ) { entry->portblocks[ i ].udp[j].port5 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 5; return 0; }
-					if( entry->portblocks[ i ].udp[j].port6 == 0 ) { entry->portblocks[ i ].udp[j].port6 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 6; return 0; }
-					if( entry->portblocks[ i ].udp[j].port7 == 0 ) { entry->portblocks[ i ].udp[j].port7 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 7; return 0; }
+					bmp = &entry->portblocks[ i ].udp[ j ];
 					break;
 				case IPPROTO_ICMP:
-					RTE_LOG( DEBUG, MAIN, "Iterating over pba i=%d j=%d\n", i, j );
-					if( entry->portblocks[ i ].icmp[j].port0 == 0 ) { entry->portblocks[ i ].icmp[j].port0 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8; return 0; }
-					if( entry->portblocks[ i ].icmp[j].port1 == 0 ) { entry->portblocks[ i ].icmp[j].port1 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 1; return 0; }
-					if( entry->portblocks[ i ].icmp[j].port2 == 0 ) { entry->portblocks[ i ].icmp[j].port2 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 2; return 0; }
-					if( entry->portblocks[ i ].icmp[j].port3 == 0 ) { entry->portblocks[ i ].icmp[j].port3 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 3; return 0; }
-					if( entry->portblocks[ i ].icmp[j].port4 == 0 ) { entry->portblocks[ i ].icmp[j].port4 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 4; return 0; }
-					if( entry->portblocks[ i ].icmp[j].port5 == 0 ) { entry->portblocks[ i ].icmp[j].port5 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 5; return 0; }
-					if( entry->portblocks[ i ].icmp[j].port6 == 0 ) { entry->portblocks[ i ].icmp[j].port6 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 6; return 0; }
-					if( entry->portblocks[ i ].icmp[j].port7 == 0 ) { entry->portblocks[ i ].icmp[j].port7 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 7; return 0; }
+					bmp = &entry->portblocks[ i ].icmp[ j ];
 					break;
 				default:
 					break;
 			}
+			if( bmp == NULL ) 
+			{
+				RTE_LOG( DEBUG, MAIN, "Cannot find right protocol for cgnat_alloc_port\n" );
+				return -1;
+			}
+			if( bmp->port0 == 0 ) { bmp->port0 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8; return 0; }
+			if( bmp->port1 == 0 ) { bmp->port1 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 1; return 0; }
+			if( bmp->port2 == 0 ) { bmp->port2 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 2; return 0; }
+			if( bmp->port3 == 0 ) { bmp->port3 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 3; return 0; }
+			if( bmp->port4 == 0 ) { bmp->port4 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 4; return 0; }
+			if( bmp->port5 == 0 ) { bmp->port5 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 5; return 0; }
+			if( bmp->port6 == 0 ) { bmp->port6 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 6; return 0; }
+			if( bmp->port7 == 0 ) { bmp->port7 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 7; return 0; }
 		}
 	}
 	RTE_LOG( DEBUG, MAIN, "Not found any pba with free entries for subscriber " IPv4_BYTES_FMT "\n", IPv4_BYTES( subscriber ) );
