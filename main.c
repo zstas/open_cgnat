@@ -186,19 +186,6 @@ int main( int argc, char ** argv )
 
 	mbuf_pool = rte_pktmbuf_pool_create( "mbuf_pool", NUM_MBUFS, MBUF_CACHE_SIZE, 0, RTE_MBUF_DEFAULT_BUF_SIZE, rte_socket_id() );
 
-	struct bitarray *bat = bitarray_init( 20 );
-	int32_t rrr = bitarray_set_next_available_bit( bat );
-	RTE_LOG( INFO, MAIN, "Set bit with result %d\n", rrr );
-	rrr = bitarray_set_next_available_bit( bat );
-	RTE_LOG( INFO, MAIN, "Set bit with result %d\n", rrr );
-	rrr = bitarray_set_next_available_bit( bat );
-	RTE_LOG( INFO, MAIN, "Set bit with result %d\n", rrr );
-	rrr = bitarray_clean_bit( bat, 1 );
-	RTE_LOG( INFO, MAIN, "Clean bit with result %d\n", rrr );
-	bitarray_print( bat );
-	rrr = bitarray_set_next_available_bit( bat );
-	RTE_LOG( INFO, MAIN, "Set bit with result %d\n", rrr );
-
 	if( mbuf_pool == NULL )
 		rte_exit( EXIT_FAILURE, "Cannot create mbuf pool\n" );
 

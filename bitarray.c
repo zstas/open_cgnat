@@ -1,13 +1,19 @@
 #include "main.h"
 
-struct bitarray* bitarray_init( uint16_t length )
+/*
+ * Init bit array:
+ * start - first element
+ * end - end element
+ */
+struct bitarray* bitarray_init( uint16_t start, uint16_t end )
 {
     struct bitarray *new_array = rte_calloc( NULL, 1, sizeof( struct bitarray ), 0 );
 
-    new_array->length = length;
+    new_array->length = end - start;
+    new_array->offset = start;
 
-    uint8_t length_in_bytes = length / 8;
-    if( length % 8 > 0)
+    uint8_t length_in_bytes = new_array->length / 8;
+    if( new_array->length % 8 > 0)
         length_in_bytes++;
 
     new_array->array = rte_calloc( NULL, length_in_bytes, sizeof( uint8_t ), 0 );
@@ -28,27 +34,29 @@ int32_t bitarray_set_next_available_bit( struct bitarray *a )
     while( index < ( a->length / 8 ) && a->array[ index ] == 0xFF )
         index++;
 
-    if( ( ( a->array[ index ] >> 0 ) & 1 ) == 0 ) { a->array[ index ] |= 1 << 0; return index * 8 + 0; }
-    if( ( ( a->array[ index ] >> 1 ) & 1 ) == 0 ) { a->array[ index ] |= 1 << 1; return index * 8 + 1; }
-    if( ( ( a->array[ index ] >> 2 ) & 1 ) == 0 ) { a->array[ index ] |= 1 << 2; return index * 8 + 2; }
-    if( ( ( a->array[ index ] >> 3 ) & 1 ) == 0 ) { a->array[ index ] |= 1 << 3; return index * 8 + 3; }
-    if( ( ( a->array[ index ] >> 4 ) & 1 ) == 0 ) { a->array[ index ] |= 1 << 4; return index * 8 + 4; }
-    if( ( ( a->array[ index ] >> 5 ) & 1 ) == 0 ) { a->array[ index ] |= 1 << 5; return index * 8 + 5; }
-    if( ( ( a->array[ index ] >> 6 ) & 1 ) == 0 ) { a->array[ index ] |= 1 << 6; return index * 8 + 6; }
-    if( ( ( a->array[ index ] >> 7 ) & 1 ) == 0 ) { a->array[ index ] |= 1 << 7; return index * 8 + 7; }
+    for( int i = 0; i < 8; i++ )
+    {
+        if( ( ( a->array[ index ] >> i ) & 1 ) != 0 )
+            continue;
+        
+        a->array[ index ] |= 1 << i;
+        return a->offset + index * 8 + i;
+    }
 
     return -1;
 }
 
 int8_t bitarray_clean_bit( struct bitarray *a, uint16_t b )
 {
-    if( b > a->length )
+    if( ( b > a->length + a->offset ) || ( b < a->offset ) )
         return -1;
+
+    b -= a->offset;
 
     uint8_t selected_byte = b / 8;
     
     uint8_t selected_offset = b % 8;
-    a->array[ selected_byte ] ^= 1 << selected_offset;
+    a->array[ selected_byte ] &= ~(1 << selected_offset );
     return 0;
 }
 
