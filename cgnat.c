@@ -64,12 +64,12 @@ void cgnat_init_pool_entry( struct cgnat_pool *pool, struct cgnat_pool_entry *en
 	RTE_LOG( INFO, MAIN, "Initialization cgnat_init_pool_entry with ip " IPv4_BYTES_FMT " and pba_size: %d\n", IPv4_BYTES( ip_address ), pool->pba_count );
 	entry->ip_address = ip_address;
 	entry->portblocks = rte_calloc( NULL, pool->pba_count, sizeof( struct cgnat_pba_entry ), 0 );
-	uint8_t bytes = ( 1 << pool->conf.pba_size ) / 8;
 	for( int i = 0; i < pool->pba_count; i++ )
 	{
-		entry->portblocks[i].tcp = rte_calloc( NULL, bytes, sizeof( struct bitmask_ports ), 0 );
-		entry->portblocks[i].udp = rte_calloc( NULL, bytes, sizeof( struct bitmask_ports ), 0 );
-		entry->portblocks[i].icmp = rte_calloc( NULL, bytes, sizeof( struct bitmask_ports ), 0 );
+		uint16_t start_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size );
+		entry->portblocks[i].tcp = bitarray_init( start_port, start_port + ( 1 << pool->conf.pba_size) );
+		entry->portblocks[i].udp = bitarray_init( start_port, start_port + ( 1 << pool->conf.pba_size) );
+		entry->portblocks[i].icmp = bitarray_init( start_port, start_port + ( 1 << pool->conf.pba_size) );
 	}
 }
 
@@ -133,42 +133,60 @@ static inline int8_t cgnat_alloc_port( struct cgnat_pool *pool, struct cgnat_poo
 		for( int j = 0; j < ( ( 1 << pool->conf.pba_size ) / 8 ); j++ )
 		{
 			RTE_LOG( DEBUG, MAIN, "Iterating over pba i=%d j=%d\n", i, j );
-			struct bitmask_ports *bmp = NULL;
+			struct bitarray *bar = NULL;
 			switch( proto )
 			{
 				case IPPROTO_TCP:
-					bmp = &entry->portblocks[ i ].tcp[ j ];
+					bar = &entry->portblocks[ i ].tcp[ j ];
 					break;
 				case IPPROTO_UDP:
-					bmp = &entry->portblocks[ i ].udp[ j ];
+					bar = &entry->portblocks[ i ].udp[ j ];
 					break;
 				case IPPROTO_ICMP:
-					bmp = &entry->portblocks[ i ].icmp[ j ];
+					bar = &entry->portblocks[ i ].icmp[ j ];
 					break;
 				default:
 					break;
 			}
-			if( bmp == NULL ) 
+			if( bar == NULL ) 
 			{
 				RTE_LOG( DEBUG, MAIN, "Cannot find right protocol for cgnat_alloc_port\n" );
 				return -1;
 			}
-			if( bmp->port0 == 0 ) { bmp->port0 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8; return 0; }
-			if( bmp->port1 == 0 ) { bmp->port1 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 1; return 0; }
-			if( bmp->port2 == 0 ) { bmp->port2 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 2; return 0; }
-			if( bmp->port3 == 0 ) { bmp->port3 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 3; return 0; }
-			if( bmp->port4 == 0 ) { bmp->port4 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 4; return 0; }
-			if( bmp->port5 == 0 ) { bmp->port5 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 5; return 0; }
-			if( bmp->port6 == 0 ) { bmp->port6 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 6; return 0; }
-			if( bmp->port7 == 0 ) { bmp->port7 = 1; *selected_port = pool->conf.port_from + i * ( 1 << pool->conf.pba_size ) + j * 8 + 7; return 0; }
+			int32_t temp_port = bitarray_set_next_available_bit( bar );
+			if( temp_port != -1 )
+			{
+				*selected_port = (uint16_t)temp_port;
+				return 0;
+			}
 		}
 	}
 	RTE_LOG( DEBUG, MAIN, "Not found any pba with free entries for subscriber " IPv4_BYTES_FMT "\n", IPv4_BYTES( subscriber ) );
 	return -1;
 }
 
-static inline void cgnat_dealloc_port( struct cgnat_pool *pool, uint32_t subscriber, uint8_t proto, uint16_t port )
+static inline void cgnat_dealloc_port( struct cgnat_pool *pool, uint32_t pool_address, uint8_t proto, uint16_t port )
 {
+	struct cgnat_pool_entry *entry = &pool->addresses[ pool_address - pool->conf.ip_from ];
+	uint16_t pba_number = ( port - pool->conf.port_from ) / 8 + 1;
+	struct bitarray *bar = NULL;
+	switch( proto )
+	{
+		case IPPROTO_TCP:
+			bar = entry->portblocks[ pba_number ].tcp;
+			break;
+		case IPPROTO_UDP:
+			bar = entry->portblocks[ pba_number ].udp;
+			break;
+		case IPPROTO_ICMP:
+			bar = entry->portblocks[ pba_number ].icmp;
+			break;
+		default:
+			break;
+	}
+	if( bar == NULL )
+		return;
+	bitarray_clean_bit( bar, port );
 }
 
 uint32_t cgnat_allocate_inside_translation( struct cgnat_pool *pool, struct five_tuple tuple )
@@ -220,7 +238,7 @@ uint32_t cgnat_allocate_inside_translation( struct cgnat_pool *pool, struct five
 			break;
 	}
 
-	RTE_LOG( DEBUG, MAIN, "Allocated xlation " IPv4_BYTES_FMT ":%d " IPv4_BYTES_FMT ":%d proto %d\n", IPv4_BYTES( tuple.src_address ), tuple.src_port, IPv4_BYTES( paired_ip ), selected_port, tuple.proto );
+	RTE_LOG( INFO, MAIN, "Allocated xlation " IPv4_BYTES_FMT ":%d " IPv4_BYTES_FMT ":%d proto %d\n", IPv4_BYTES( tuple.src_address ), tuple.src_port, IPv4_BYTES( paired_ip ), selected_port, tuple.proto );
 	return xl;
 }
 
@@ -497,8 +515,47 @@ int32_t cgnat_translate_outside( struct cgnat_pool *pool, struct rte_mbuf *pkt )
 	return ACTION_PASS_TO_LAN;
 }
 
+int8_t cgnat_deallocate_xlation( struct cgnat_pool *pool, int index )
+{
+	struct cgnat_translation *xl = &pool->xlations[ index ];
+	int32_t subscriber_id = rte_hash_lookup( pool->subscribers_hash, ( void * )&xl->private_ip );
+	switch( xl->proto )
+	{
+		case IPPROTO_TCP:
+			pool->subscribers[ subscriber_id ].tcp_xlations--;
+			break;
+		case IPPROTO_UDP:
+			pool->subscribers[ subscriber_id ].udp_xlations--;
+			break;
+		case IPPROTO_ICMP:
+			pool->subscribers[ subscriber_id ].icmp_xlations--;
+			break;
+	}
+
+	struct five_tuple global_tuple;
+	cgnat_five_tuple_init( &global_tuple, xl->global_ip, xl->global_port, xl->proto, xl->public_ip, xl->public_port );
+	struct five_tuple private_tuple;
+	cgnat_five_tuple_init( &private_tuple, xl->private_ip, xl->private_port, xl->proto, xl->global_ip, xl->global_port );
+
+	rte_hash_del_key( pool->sub_to_pub, &private_tuple );
+	rte_hash_del_key( pool->pub_to_sub, &global_tuple );
+
+	cgnat_dealloc_port( pool, xl->public_ip, xl->proto, xl->public_port );
+
+	xl->private_ip = 0;
+	xl->private_port = 0;
+	xl->proto = 0;
+	xl->public_ip = 0;
+	xl->public_port = 0;
+	xl->global_ip = 0;
+	xl->global_port = 0;
+
+	return 0;
+}
+
 void cgnat_clear_expired_xlations( struct cgnat_pool *pool )
 {
+	uint64_t current_time = rte_atomic64_read( &timestamp );
 	for( int i = 0; i < ( 1 << pool->conf.maximum_xlations ); i++ )
 	{
 		if( pool->xlations[ i ].private_ip == 0 )
@@ -507,6 +564,10 @@ void cgnat_clear_expired_xlations( struct cgnat_pool *pool )
 		switch( pool->xlations[ i ].flags )
 		{
 			case CGNAT_XLATE_TCP_SYN:
+				if( ( pool->xlations[ i ].updated_at - current_time ) >= pool->conf.timeout_tcp_est )
+				{
+					cgnat_deallocate_xlation( pool, i );
+				}
 				break;
 			case CGNAT_XLATE_TCP_EST:
 				break;

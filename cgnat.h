@@ -77,24 +77,12 @@ struct cgnat_pool_entry
 	struct cgnat_pba_entry *portblocks;
 };
 
-struct bitmask_ports
-{
-	uint8_t port0:1;
-	uint8_t port1:1;
-	uint8_t port2:1;
-	uint8_t port3:1;
-	uint8_t port4:1;
-	uint8_t port5:1;
-	uint8_t port6:1;
-	uint8_t port7:1;
-};
-
 struct cgnat_pba_entry
 {
 	uint32_t subscriber;
-	struct bitmask_ports *tcp;
-	struct bitmask_ports *udp;
-	struct bitmask_ports *icmp;
+	struct bitarray *tcp;
+	struct bitarray *udp;
+	struct bitarray *icmp;
 };
 
 struct five_tuple

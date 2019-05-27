@@ -196,6 +196,19 @@ int main( int argc, char ** argv )
     if( ret < 0 )
             rte_exit(EXIT_FAILURE, "Error NAT POOL initialization with code %d\n", ret );
 
+	struct five_tuple tmp = 
+	{
+		.src_address = 0x64100000,
+		.dst_address = 0x08080808,
+		.src_port = 2556,
+		.dst_port = 80,
+		.proto = IPPROTO_TCP
+	};
+	cgnat_allocate_inside_translation( &global_config.pool, tmp );
+	cgnat_allocate_inside_translation( &global_config.pool, tmp );
+	tmp.src_port= 2557;
+	cgnat_allocate_inside_translation( &global_config.pool, tmp );
+
 	schedule_lcores( global_config.mode );
 
 	lcore_main();

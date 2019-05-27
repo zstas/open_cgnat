@@ -85,7 +85,7 @@ int lcore_worker( void *w_id )
 	while( 1 )
 	{
 		tx_pkts = 0;
-		memset( tx_packets, 0, 32 );
+		memset( tx_packets, 0, 32 * sizeof( void* ) );
 		rx_pkts = rte_ring_dequeue_burst( ring, packets, 32, NULL );
 
 		for( uint8_t i = 0; i < rx_pkts; i++ )
