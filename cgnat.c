@@ -260,19 +260,14 @@ void cgnat_icmp_checksum( struct icmp_hdr *icmp, uint16_t len )
 	while( len > 1 )
 	{
 		sum += *( addr++ );
-		RTE_LOG( DEBUG, WORKER, "Sum is: %x\n", sum );
 		len -= 2;
 	}
 
 	if( len > 0 )
 		sum += *( uint8_t * )addr;
 
-	RTE_LOG( DEBUG, WORKER, "Sum is: %x\n", sum );
-
 	while( sum >> 16 )
 		sum = ( sum & 0xFFFF ) + ( sum >> 16 );
-
-	RTE_LOG( DEBUG, WORKER, "Collapsed Sum is: %x\n", sum );
 
 	icmp->icmp_cksum = ~sum;
 }
@@ -542,13 +537,7 @@ int8_t cgnat_deallocate_xlation( struct cgnat_pool *pool, int index )
 
 	cgnat_dealloc_port( pool, xl->public_ip, xl->proto, xl->public_port );
 
-	xl->private_ip = 0;
-	xl->private_port = 0;
-	xl->proto = 0;
-	xl->public_ip = 0;
-	xl->public_port = 0;
-	xl->global_ip = 0;
-	xl->global_port = 0;
+	memset( xl, 0, sizeof( struct cgnat_translation ) );
 
 	return 0;
 }
@@ -564,18 +553,34 @@ void cgnat_clear_expired_xlations( struct cgnat_pool *pool )
 		switch( pool->xlations[ i ].flags )
 		{
 			case CGNAT_XLATE_TCP_SYN:
-				if( ( pool->xlations[ i ].updated_at - current_time ) >= pool->conf.timeout_tcp_est )
+				if( ( pool->xlations[ i ].updated_at - current_time ) >= pool->conf.timeout_tcp_syn )
 				{
 					cgnat_deallocate_xlation( pool, i );
 				}
 				break;
 			case CGNAT_XLATE_TCP_EST:
+				if( ( pool->xlations[ i ].updated_at - current_time ) >= pool->conf.timeout_tcp_est )
+				{
+					cgnat_deallocate_xlation( pool, i );
+				}
 				break;
 			case CGNAT_XLATE_TCP_FIN_RES:
+				if( ( pool->xlations[ i ].updated_at - current_time ) >= pool->conf.timeout_tcp_fin_res )
+				{
+					cgnat_deallocate_xlation( pool, i );
+				}
 				break;
 			case CGNAT_XLATE_UDP:
+				if( ( pool->xlations[ i ].updated_at - current_time ) >= pool->conf.timeout_tcp_udp )
+				{
+					cgnat_deallocate_xlation( pool, i );
+				}
 				break;
 			case CGNAT_XLATE_ICMP:
+				if( ( pool->xlations[ i ].updated_at - current_time ) >= pool->conf.timeout_tcp_icmp )
+				{
+					cgnat_deallocate_xlation( pool, i );
+				}
 				break;
 		}
 	}
