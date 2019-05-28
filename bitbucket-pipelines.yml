@@ -12,5 +12,6 @@ pipelines:
           - cd /opt/
           - wget http://fast.dpdk.org/rel/dpdk-19.05.tar.xz
           - tar -xf dpdk-19.05.tar.xz
+          - cd dpdk-19.05/
           - make config T=x86_64-native-linuxapp-gcc
           - make
