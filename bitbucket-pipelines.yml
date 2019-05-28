@@ -9,8 +9,8 @@ pipelines:
   default:
     - step:
         script:
-          - wget http://fast.dpdk.org/rel/dpdk-19.05.tar.xz -o /opt/dpdk-19.05.tar.xz
           - cd /opt/
+          - wget http://fast.dpdk.org/rel/dpdk-19.05.tar.xz
           - tar -xf dpdk-19.05.tar.xz
           - make config T=x86_64-native-linuxapp-gcc
           - make
