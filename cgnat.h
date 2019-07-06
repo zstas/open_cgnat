@@ -2,21 +2,22 @@
 
 #define NOT_ENOUGH_MEMORY_TO_INIT -1
 
-#define ACTION_DROP		0x1
-#define ACTION_PASS_TO_WAN	0x2
-#define ACTION_PASS_TO_LAN	0x3
+#define ACTION_DROP						0x1
+#define ACTION_PASS_TO_WAN				0x2
+#define ACTION_PASS_TO_LAN				0x3
 
-#define CGNAT_XLATE_TCP_SYN	0x1
-#define CGNAT_XLATE_TCP_EST	0x2
-#define CGNAT_XLATE_TCP_FIN_RES 0x3
-#define CGNAT_XLATE_UDP		0x4
-#define CGNAT_XLATE_ICMP	0x5
+#define CGNAT_XLATE_TCP_SYN				0x1
+#define CGNAT_XLATE_TCP_EST				0x2
+#define CGNAT_XLATE_TCP_FIN_RES 		0x3
+#define CGNAT_XLATE_UDP					0x4
+#define CGNAT_XLATE_ICMP				0x5
 
-#define CGNAT_XLATE_TIMEOUT_TCP_SYN	128
-#define CGNAT_XLATE_TIMEOUT_TCP_EST	600
+#define CGNAT_XLATE_TIMEOUT_TCP_SYN		128
+#define CGNAT_XLATE_TIMEOUT_TCP_EST		600
 #define CGNAT_XLATE_TIMEOUT_TCP_FIN_RES	240
-#define CGNAT_XLATE_TIMEOUT_TCP_UDP	120
-#define CGNAT_XLATE_TIMEOUT_TCP_ICMP	60
+#define CGNAT_XLATE_TIMEOUT_UDP			120
+#define CGNAT_XLATE_TIMEOUT_ICMP		60
+#define CGNAT_XLATE_TIMEOUT_GENERIC		60
 
 struct cgnat_pool_conf
 {
@@ -40,8 +41,9 @@ struct cgnat_pool_conf
 	uint16_t timeout_tcp_syn;
 	uint16_t timeout_tcp_est;
 	uint16_t timeout_tcp_fin_res;
-	uint16_t timeout_tcp_udp;
-	uint16_t timeout_tcp_icmp;
+	uint16_t timeout_udp;
+	uint16_t timeout_icmp;
+	uint16_t timeout_generic;
 
 	//Flags
 	uint8_t address_selection_method: 4;

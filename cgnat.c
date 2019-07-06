@@ -436,7 +436,7 @@ int32_t cgnat_translate_outside( struct cgnat_pool *pool, struct rte_mbuf *pkt )
 			pool->xlations[ ret ].counters.sub_to_pub_pkts++;
 			//pool->xlations[ ret ].updated_at = time( NULL );
 			pool->xlations[ ret ].updated_at = rte_atomic64_read( &timestamp );
-			//pool->xlations[ ret ].counters.sub_to_pub_bytes += len;
+			pool->xlations[ ret ].counters.sub_to_pub_bytes += pkt->data_len;
 			ipv4->hdr_checksum = 0;
 			//ipv4->hdr_checksum = rte_ipv4_cksum( ipv4 );
 
@@ -571,17 +571,22 @@ void cgnat_clear_expired_xlations( struct cgnat_pool *pool )
 				}
 				break;
 			case CGNAT_XLATE_UDP:
-				if( ( pool->xlations[ i ].updated_at - current_time ) >= pool->conf.timeout_tcp_udp )
+				if( ( pool->xlations[ i ].updated_at - current_time ) >= pool->conf.timeout_udp )
 				{
 					cgnat_deallocate_xlation( pool, i );
 				}
 				break;
 			case CGNAT_XLATE_ICMP:
-				if( ( pool->xlations[ i ].updated_at - current_time ) >= pool->conf.timeout_tcp_icmp )
+				if( ( pool->xlations[ i ].updated_at - current_time ) >= pool->conf.timeout_icmp )
 				{
 					cgnat_deallocate_xlation( pool, i );
 				}
 				break;
+			default:
+				if( ( pool->xlations[ i ].updated_at - current_time ) >= pool->conf.timeout_generic )
+				{
+					cgnat_deallocate_xlation( pool, i );
+				}
 		}
 	}
 }
