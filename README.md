@@ -1,6 +1,6 @@
 # Open CGNat
 
-There is an open implementation of Carrier-Grade NAT. Written using the Intel DPDK Library. Opencgat act as a network bridge to achieve best PPS/BPS performance.
+This is an open implementation of Carrier-Grade NAT. Written using the Intel DPDK Library. Opencgat act as a network bridge to achieve best PPS/BPS performance.
 
 However, it is a WIP (Work In Progress), so do NOT use this project in production at the moment. I am open to proposals, issues, feature requests, etc.
 
